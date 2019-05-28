@@ -1,0 +1,1 @@
+Pull all four MNIST binary files in this folder if you want your tests to pass.
