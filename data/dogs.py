@@ -11,18 +11,19 @@ import numpy as np
 import pandas as pd
 from scipy.misc import imread, imresize
 import os
-from utils import get
 
 class DogsDataset:
 
-    def __init__(self, num_classes=10, training=True, _all=False):
+    def __init__(self, path_to_dogsset, num_classes=10, training=True, _all=False):
         """
         Reads in the necessary data from disk and prepares data for training.
         """
+        self.path_to_dogs_csv = os.path.join(path_to_dogsset, 'dogs.csv')
+        self.images_dir = os.path.join(path_to_dogsset, 'images')
         np.random.seed(0)
         self.num_classes = num_classes
         # Load in all the data we need from disk
-        self.metadata = pd.read_csv(get('csv_file'))
+        self.metadata = pd.read_csv(self.path_to_dogs_csv)
         self.semantic_labels = dict(zip(
             self.metadata['numeric_label'],
             self.metadata['semantic_label']))
@@ -83,8 +84,6 @@ class DogsDataset:
             X = self.trainX[self.trainY == label]
         elif partition == 'valid':
             X = self.validX[self.validY == label]
-        elif partition == 'test':
-            raise ValueError('Nice try')
         else:
             raise ValueError('Partition {} does not exist'.format(partition))
         return X if num_examples == None else X[:num_examples]
@@ -138,9 +137,9 @@ class DogsDataset:
         batchX = np.empty(shape)
         for i, index in enumerate(indices):
             if index < len(self.trainX):
-                batchX[i,:,:,:] = self.trainX[index,:,:,:]
+                batchX[i, :, :, :] = self.trainX[index,:,:,:]
             elif index < len(self.trainX) + len(self.testX):
-                batchX[i,:,:,:] = self.testX[index - len(self.trainX)]
+                batchX[i, :, :, :] = self.testX[index - len(self.trainX)]
         count += batch_size
         return batchX, all_index, count
 
@@ -177,20 +176,20 @@ class DogsDataset:
             for i, row in df.iterrows():
                 label = row['numeric_label']
                 if label >= self.num_classes: continue
-                image = imread(os.path.join(get('image_path'), row['filename']))
+                image = imread(os.path.join(self.images_dir, row['filename']))
                 X.append(image)
                 y.append(row['numeric_label'])
             return np.array(X), np.array(y).astype(int)
         else:
             for i, row in df.iterrows():
-                image = imread(os.path.join(get('image_path'), row['filename']))
+                image = imread(os.path.join(self.images_dir, row['filename']))
                 X.append(image)
             return np.array(X), None
 
     def _get_images(self, df):
         X = []
         for i, row in df.iterrows():
-            image = imread(os.path.join(get('image_path'), row['filename']))
+            image = imread(os.path.join(self.images_dir, row['filename']))
             X.append(image)
         return np.array(X)
 
@@ -198,7 +197,7 @@ class DogsDataset:
         """
         Preprocesses the data partition X by image resizing and normalization
         """
-        X = self._resize(X)
+        # X = self._resize(X)
         X = self._normalize(X, is_train)
         return X
 
@@ -210,17 +209,11 @@ class DogsDataset:
         Returns:
             the resized images as a numpy array.
         """
-        # TODO: Complete this function
-
-        ## Solution
         image_size = (get('image_dim'), get('image_dim'))
         resized = []
         for i in range(X.shape[0]):
             resized.append(imresize(X[i], size=image_size, interp='bicubic'))
         return np.array(resized)
-        ## Solution
-
-        return X
 
     def _normalize(self, X, is_train):
         """
@@ -231,19 +224,8 @@ class DogsDataset:
         Returns:
             the normalized data as a numpy array.
         """
-        # TODO: Complete this function
-
-        ## Solution
         if is_train:
             self.image_mean = np.mean(X, axis=(0,1,2))
             self.image_std = np.std(X, axis=(0,1,2))
         return (X - self.image_mean) / self.image_std
-        ## Solution
 
-        return X
-
-if __name__ == '__main__':
-    dogs = DogsDataset(num_classes=10, _all=True)
-    print("Train:\t", len(dogs.trainX))
-    print("Validation:\t", len(dogs.validX))
-    print("Test:\t", len(dogs.testX))
