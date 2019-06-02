@@ -1,12 +1,3 @@
-"""
-EECS 445 - Introduction to Machine Learning
-Fall 2017 - Project 2
-Dogs Dataset
-    Class wrapper for interfacing with the dataset of dog images
-    Usage:
-        - from data.dogs import DogsDataset
-        - python -m data.dogs
-"""
 import numpy as np
 import pandas as pd
 from scipy.misc import imread, imresize
@@ -14,7 +5,8 @@ import os
 
 class DogsDataset:
 
-    def __init__(self, path_to_dogsset, num_classes=10, training=True, _all=False):
+    def __init__(self, path_to_dogsset, num_classes=10, training=True, _all=False,
+                 new_size=None):
         """
         Reads in the necessary data from disk and prepares data for training.
         """
@@ -27,6 +19,7 @@ class DogsDataset:
         self.semantic_labels = dict(zip(
             self.metadata['numeric_label'],
             self.metadata['semantic_label']))
+        self.new_size = new_size
 
         if _all:
             self.trainX, self.trainY = self._load_data('train')
@@ -197,19 +190,20 @@ class DogsDataset:
         """
         Preprocesses the data partition X by image resizing and normalization
         """
-        # X = self._resize(X)
+        if self.new_size:
+            X = self._resize(X)
         X = self._normalize(X, is_train)
         return X
 
     def _resize(self, X):
         """
-        Resizes the data partition X to the size specified in the config file.
+        Resizes the data partition X to the size specified in self.new_size.
         Uses bicubic interpolation for resizing.
 
         Returns:
             the resized images as a numpy array.
         """
-        image_size = (get('image_dim'), get('image_dim'))
+        image_size = (self.new_size, self.new_size)
         resized = []
         for i in range(X.shape[0]):
             resized.append(imresize(X[i], size=image_size, interp='bicubic'))
