@@ -20,6 +20,15 @@ class DogsDataset:
         You can also access the training, validation, and testing sets
         with the `get_training_examples()`, `get_validation_exmples()`
         and `get_test_examples()` functions.
+
+        The `trainX`, `validX`, and `testX` arrays are of shape:
+            `[num_examples, height, width, n_channels]`
+
+        (For DogSet `height` == `width`.)
+
+        The `trainY`, `validY`, and `testY` arrays are of shape:
+            `[num_examples]`
+
         """
         self.path_to_dogs_csv = os.path.join(path_to_dogsset, 'dogs.csv')
         self.images_dir = os.path.join(path_to_dogsset, 'images')
@@ -136,7 +145,7 @@ class DogsDataset:
 
     def _preprocess(self, X, is_train):
         """
-        Preprocesses the data partition X by normalizating the image
+        Preprocesses the data partition X by normalizing the images
         """
         X = self._normalize(X, is_train)
         return X
