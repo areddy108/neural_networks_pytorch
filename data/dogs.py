@@ -1,12 +1,11 @@
 import numpy as np
 import pandas as pd
-from scipy.misc import imread, imresize
+from matplotlib.pyplot import imread
 import os
 
 class DogsDataset:
 
-    def __init__(self, path_to_dogsset, num_classes=10, training=True, _all=False,
-                 new_size=None):
+    def __init__(self, path_to_dogsset, num_classes=10):
         """
         Reads in the necessary data from disk and prepares data for training.
         """
@@ -18,54 +17,39 @@ class DogsDataset:
         self.metadata = pd.read_csv(self.path_to_dogs_csv)
         self.semantic_labels = dict(zip(
             self.metadata['numeric_label'],
-            self.metadata['semantic_label']))
-        self.new_size = new_size
+            self.metadata['semantic_label']
+        ))
 
-        if _all:
-            self.trainX, self.trainY = self._load_data('train')
-            self.validX, self.validY = self._load_data('valid')
-            self.testX = self._load_data('all')
-            self.all_index = np.arange(len(self.trainX) + len(self.testX))
-            self.all_count = 0
-            self.valid_count = 0
-        else:
-            self.trainX, self.trainY = self._load_data('train')
-            self.train_count = 0
+        self.trainX, self.trainY = self._load_data('train')
+        self.validX, self.validY = self._load_data('valid')
+        self.testX, self.testY = self._load_data('test')
+        self.all_index = np.arange(len(self.trainX) + len(self.testX))
+        self.all_count = 0
+        self.valid_count = 0
 
-            if training:
-                self.validX, self.validY = self._load_data('valid')
-                self.valid_count = 0
-            else:
-                self.testX = self._load_data('test')
-                self.test_count = 0
-
-    def get_batch(self, partition, batch_size=32):
+    def get_train_examples(self):
         """
-        Returns a batch of batch_size examples. If partition is not test,
-        also returns the corresponding labels.
+        Gets all training examples in DogSet.
+        :return:
+            (np.ndarray, np.ndarray), all training examples and all training labels
         """
-        if partition == 'train':
-            batchX, batchY, self.trainX, self.trainY, self.train_count = \
-                self._batch_helper(
-                    self.trainX, self.trainY, self.train_count, batch_size)
-            return batchX, batchY
-        elif partition == 'valid':
-            batchX, batchY, self.validX, self.validY, self.valid_count = \
-                self._batch_helper(
-                    self.validX, self.validY, self.valid_count, batch_size)
-            return batchX, batchY
-        elif partition == 'test':
-            batchX, self.testX, self.test_count = \
-                self._batch_helper(
-                    self.testX, None, self.test_count, batch_size)
-            return batchX
-        elif partition == 'all':
-            batchX, self.all_index, self.all_count = \
-                self._batch_helper_all(
-                    self.all_index, self.all_count, batch_size)
-            return batchX
-        else:
-            raise ValueError('Partition {} does not exist'.format(partition))
+        return self.trainX, self.trainY
+
+    def get_validation_examples(self):
+        """
+        Gets all validation examples in DogSet.
+        :return:
+            (np.ndarray, np.ndarray), all validation examples and all validation labels
+        """
+        return self.validX, self.validY
+
+    def get_test_examples(self):
+        """
+        Gets all test examples in DogSet.
+        :return:
+            (np.ndarray, np.ndarray), all test examples and all test labels
+        """
+        return self.testX, self.trainY
 
     def get_examples_by_label(self, partition, label, num_examples=None):
         """
@@ -80,16 +64,6 @@ class DogsDataset:
         else:
             raise ValueError('Partition {} does not exist'.format(partition))
         return X if num_examples == None else X[:num_examples]
-
-    def finished_test_epoch(self):
-        """
-        Returns true if we have finished an iteration through the test set.
-        Also resets the state of the test counter.
-        """
-        result = self.test_count >= len(self.testX)
-        if result:
-            self.test_count = 0
-        return result
 
     def get_semantic_label(self, numeric_label):
         """
@@ -149,7 +123,7 @@ class DogsDataset:
             return X
         elif partition == 'all':
             X = self._get_images(
-                self.metadata[~self.metadata.partition.isin(['train', 'valid'])])
+                self.metadata[~self.metadata.partition.isin(['train', 'valid', 'test'])])
             X = self._preprocess(X, False)
             return X
         else:
@@ -190,24 +164,8 @@ class DogsDataset:
         """
         Preprocesses the data partition X by image resizing and normalization
         """
-        if self.new_size:
-            X = self._resize(X)
         X = self._normalize(X, is_train)
         return X
-
-    def _resize(self, X):
-        """
-        Resizes the data partition X to the size specified in self.new_size.
-        Uses bicubic interpolation for resizing.
-
-        Returns:
-            the resized images as a numpy array.
-        """
-        image_size = (self.new_size, self.new_size)
-        resized = []
-        for i in range(X.shape[0]):
-            resized.append(imresize(X[i], size=image_size, interp='bicubic'))
-        return np.array(resized)
 
     def _normalize(self, X, is_train):
         """
