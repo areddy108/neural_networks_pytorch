@@ -3,11 +3,23 @@ import pandas as pd
 from matplotlib.pyplot import imread
 import os
 
+
 class DogsDataset:
 
     def __init__(self, path_to_dogsset, num_classes=10):
         """
-        Reads in the necessary data from disk and prepares data for training.
+        This is a class that loads DogSet into memory. Give it the path
+        to the DogSet folder on your machine and it will load it when you
+        initialize this object.
+
+        Training examples are stored in `self.trainX` and `self.trainY`
+        for the images and labels, respectively. Validation examples
+        are similarly in `self.validX` and `self.validY`, and test
+        examples are in `self.testX` and self.testY`.
+
+        You can also access the training, validation, and testing sets
+        with the `get_training_examples()`, `get_validation_exmples()`
+        and `get_test_examples()` functions.
         """
         self.path_to_dogs_csv = os.path.join(path_to_dogsset, 'dogs.csv')
         self.images_dir = os.path.join(path_to_dogsset, 'images')
@@ -72,44 +84,6 @@ class DogsDataset:
         """
         return self.semantic_labels[numeric_label]
 
-    def _batch_helper(self, X, y, count, batch_size):
-        """
-        Handles batching behaviors for all data partitions, including data
-        slicing, incrementing the count, and shuffling at the end of an epoch.
-        Returns the batch as well as the new count and the dataset to maintain
-        the internal state representation of each partition.
-        """
-        if count + batch_size > len(X):
-            if type(y) == np.ndarray:
-                count = 0
-                rand_idx = np.random.permutation(len(X))
-                X = X[rand_idx]
-                y = y[rand_idx]
-        batchX = X[count:count+batch_size]
-        if type(y) == np.ndarray:
-            batchY = y[count:count+batch_size]
-        count += batch_size
-        if type(y) == np.ndarray:
-            return batchX, batchY, X, y, count
-        else:
-            return batchX, X, count
-
-    def _batch_helper_all(self, all_index, count, batch_size):
-        if count + batch_size > len(all_index):
-            count = 0
-            permut = np.random.permutation(len(all_index))
-            all_index = all_index[permut]
-        indices = all_index[count:count+batch_size]
-        shape = [batch_size] + list(self.trainX.shape)[1:]
-        batchX = np.empty(shape)
-        for i, index in enumerate(indices):
-            if index < len(self.trainX):
-                batchX[i, :, :, :] = self.trainX[index,:,:,:]
-            elif index < len(self.trainX) + len(self.testX):
-                batchX[i, :, :, :] = self.testX[index - len(self.trainX)]
-        count += batch_size
-        return batchX, all_index, count
-
     def _load_data(self, partition='train'):
         """
         Loads a single data partition from file.
@@ -162,7 +136,7 @@ class DogsDataset:
 
     def _preprocess(self, X, is_train):
         """
-        Preprocesses the data partition X by image resizing and normalization
+        Preprocesses the data partition X by normalizating the image
         """
         X = self._normalize(X, is_train)
         return X
