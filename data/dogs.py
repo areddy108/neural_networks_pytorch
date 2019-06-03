@@ -82,6 +82,8 @@ class DogsDataset:
             X = self.trainX[self.trainY == label]
         elif partition == 'valid':
             X = self.validX[self.validY == label]
+        elif partition == 'test':
+            X = self.testX[self.testX == label]
         else:
             raise ValueError('Partition {} does not exist'.format(partition))
         return X if num_examples == None else X[:num_examples]
@@ -99,12 +101,7 @@ class DogsDataset:
         """
         print("loading %s..." % partition)
         Y = None
-        if partition == 'test':
-            X = self._get_images(
-                self.metadata[self.metadata.partition == 'test'])
-            X = self._preprocess(X, False)
-            return X
-        elif partition == 'all':
+        if partition == 'all':
             X = self._get_images(
                 self.metadata[~self.metadata.partition.isin(['train', 'valid', 'test'])])
             X = self._preprocess(X, False)
