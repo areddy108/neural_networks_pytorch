@@ -70,7 +70,7 @@ class DogsDataset:
         :return:
             (np.ndarray, np.ndarray), all test examples and all test labels
         """
-        return self.testX, self.trainY
+        return self.testX, self.testY
 
     def get_examples_by_label(self, partition, label, num_examples=None):
         """
@@ -83,7 +83,7 @@ class DogsDataset:
         elif partition == 'valid':
             X = self.validX[self.validY == label]
         elif partition == 'test':
-            X = self.testX[self.testX == label]
+            X = self.testX[self.testY == label]
         else:
             raise ValueError('Partition {} does not exist'.format(partition))
         return X if num_examples == None else X[:num_examples]
