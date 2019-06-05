@@ -108,30 +108,23 @@ class DogsDataset:
             return X
         else:
             X, Y = self._get_images_and_labels(
-                self.metadata[self.metadata.partition == partition],
-                training = partition in ['train', 'valid'])
+                self.metadata[self.metadata.partition == partition])
             X = self._preprocess(X, True)
             return X, Y
 
-    def _get_images_and_labels(self, df, training=True):
+    def _get_images_and_labels(self, df):
         """
         Fetches the data based on image filenames specified in df.
         If training is true, also loads the labels.
         """
         X, y = [], []
-        if training:
-            for i, row in df.iterrows():
-                label = row['numeric_label']
-                if label >= self.num_classes: continue
-                image = imread(os.path.join(self.images_dir, row['filename']))
-                X.append(image)
-                y.append(row['numeric_label'])
-            return np.array(X), np.array(y).astype(int)
-        else:
-            for i, row in df.iterrows():
-                image = imread(os.path.join(self.images_dir, row['filename']))
-                X.append(image)
-            return np.array(X), None
+        for i, row in df.iterrows():
+            label = row['numeric_label']
+            if label >= self.num_classes: continue
+            image = imread(os.path.join(self.images_dir, row['filename']))
+            X.append(image)
+            y.append(row['numeric_label'])
+        return np.array(X), np.array(y).astype(int)
 
     def _get_images(self, df):
         X = []
