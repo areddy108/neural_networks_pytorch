@@ -3,95 +3,23 @@ import numpy as np
 import os
 import struct
 from array import array as pyarray
+import pickle
 
-
-def load_data(dataset, fraction=1.0, base_folder='data'):
+def load_synth_data(dataset_name, base_folder='data'):
     """
-    Loads a dataset and performs a random stratified split into training and
-    test partitions.
-
-    Arguments:
-        dataset - (string) The name of the dataset to load. One of the
-            following:
-              'blobs': A linearly separable binary classification problem.
-              'mnist-binary': A subset of the MNIST dataset containing only
-                  0s and 1s.
-              'mnist-multiclass': A subset of the MNIST dataset containing the
-                  numbers 0 through 4, inclusive.
-              'synthetic': A small custom dataset for exploring properties of
-                  gradient descent algorithms.
-        fraction - (float) Value between 0.0 and 1.0 representing the fraction
-            of data to include in the training set. The remaining data is
-            included in the test set. Unused if dataset == 'synthetic'.
-        base_folder - (string) absolute path to your 'data' directory. If
-            defaults to 'data'.
-    Returns:
-        train_features - (np.array) An Nxd array of features, where N is the
-            number of examples and d is the number of features.
-        test_features - (np.array) An Nxd array of features, where M is the
-            number of examples and d is the number of features.
-        train_targets - (np.array) A 1D array of targets of size N.
-        test_targets - (np.array) A 1D array of targets of size M.
+    This function loads the synthesized data provided in a picke file in the
+    /data directory.
     """
-    if dataset == 'blobs':
-        path = os.path.join(base_folder, 'blobs.json')
-        train_features, test_features, train_targets, test_targets = \
-            load_json_data(path)
-    elif dataset == 'mnist-binary':
-        train_features, test_features, train_targets, test_targets = \
-            load_mnist_data(2, fraction=fraction, mnist_folder=base_folder)
-        train_targets = train_targets * 2 - 1
-        test_targets = test_targets * 2 - 1
-    elif dataset == 'mnist-multiclass':
-        train_features, test_features, train_targets, test_targets = \
-            load_mnist_data(5, fraction=fraction, examples_per_class=100,
-                            mnist_folder=base_folder)
-    elif dataset == 'synthetic':
-        path = os.path.join(base_folder,  'synthetic.json')
-        train_features, test_features, train_targets, test_targets = \
-            load_json_data(path)
-    else:
-        raise ValueError('Dataset {} not found!'.format(dataset))
 
-    # Normalize the data using feature-independent whitening. Note that the
-    # statistics are computed with respect to the training set and applied to
-    # both the training and testing sets.
-    if dataset != 'synthetic':
-        mean = train_features.mean(axis=0, keepdims=True)
-        std = train_features.std(axis=0, keepdims=True) + 1e-5
-        train_features = (train_features - mean) / std
-        if fraction < 1.0:
-            test_features = (test_features - mean) / std
+    data_path = os.path.join(base_folder, dataset_name)
 
-    return train_features, test_features, train_targets, test_targets
+    with open(data_path, 'rb') as handle:
+        data = pickle.load(handle)
 
+    trainX = data['trainX']
+    trainY = data['trainY']
 
-def load_json_data(path, fraction=None, examples_per_class=None):
-    """
-    Loads a dataset stored as a JSON file. This will not split your dataset
-    into training and testing sets, rather it returns all features and targets
-    in `train_features` and `train_targets` and leaves `test_features` and
-    `test_targets` as empty numpy arrays. This is done to match the API
-    of the other data loaders.
-
-    Args:
-        path - (string) Path to json file containing the data
-        fraction - (float) Ignored.
-        examples_per_class - (int) - Ignored.
-
-    Returns:
-        train_features - (np.array) An Nxd array of features, where N is the
-            number of examples and d is the number of features.
-        test_features - (np.array) An empty 2D numpy array.
-        train_targets - (np.array) A 1D array of targets of size N.
-        test_targets - (np.array) An empty 1D array.
-    """
-    with open(path, 'rb') as file:
-        data = json.load(file)
-    features = np.array(data[0]).astype(float)
-    targets = np.array(data[1]).astype(int)
-
-    return features, np.array([[]]), targets, np.array([])
+    return trainX, trainY
 
 
 def load_mnist_data(threshold, fraction=1.0, examples_per_class=500, mnist_folder='data'):
@@ -107,7 +35,7 @@ def load_mnist_data(threshold, fraction=1.0, examples_per_class=500, mnist_folde
             included in the test set. Unused if dataset == 'synthetic'.
         examples_per_class - (int) Number of examples to retrieve in each
             class.
-        mnist_folder - (string) Path to folder contain MNIST binary files.
+        mnist_folder - (string) Path to folder containing MNIST binary files.
 
     Returns:
         train_features - (np.array) An Nxd array of features, where N is the
