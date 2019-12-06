@@ -10,6 +10,25 @@ import numpy as np
 
 def run_model(model,running_mode='train', train_set=None, valid_set=None, test_set=None, 
 	batch_size=1, learning_rate=0.01, n_epochs=1, stop_thr=1e-4, shuffle=True):
+
+	if(running_mode == 'train'):
+		#_train(model, data)
+		optimizer = optim.SGD(model.parameters(), learning_rate)
+		data = DataLoader(train_set, batch_size, shuffle)
+		for i in range(n_epochs):
+			model, train_loss, train_accuracy = _train(model, data, optimizer)
+			print(valid_set)
+			if(valid_set is not None):
+				print('reached')
+				#valid = DataLoader(valid_set, batch_size, shuffle)
+				#valid_loss, valid_accuracy = _test(model, valid)
+				#(valid_loss < stop_thr):
+					#break
+
+	else:
+		data = DataLoader(test_set, batch_size, shuffle)
+		test_loss, test_accuracy = _test(model, data)
+
 	"""
 	This function either trains or evaluates a model. 
 
@@ -70,10 +89,42 @@ def run_model(model,running_mode='train', train_set=None, valid_set=None, test_s
 
 	"""
 
-	raise NotImplementedError()
+	#raise NotImplementedError()
 
 
 def _train(model,data_loader,optimizer,device=torch.device('cpu')):
+	running_loss = 0.0
+	correct = 0
+	total = 0
+
+	for i, data in enumerate(data_loader, 0):
+		# get the inputs; data is a list of [inputs, labels]
+		inputs, labels = data
+		# zero the parameter gradients
+		optimizer.zero_grad()
+
+		# forward + backward + optimize
+		inputs = inputs.float()
+		labels = labels.long()
+		outputs = model.forward(inputs)
+		loss = F.cross_entropy(outputs, labels)
+		loss.backward()
+		optimizer.step()
+
+		# print statistics
+		running_loss += loss.item()
+		_, predicted = torch.max(outputs.data, 1)
+		total += labels.size(0)
+		correct += (predicted == labels).sum().item()
+
+
+
+	accuracy = 100* correct/total
+	return model, running_loss/total, accuracy
+
+
+
+
 
 	"""
 	This function implements ONE EPOCH of training a neural network on a given dataset.
@@ -92,10 +143,35 @@ def _train(model,data_loader,optimizer,device=torch.device('cpu')):
 	train_accuracy: average accuracy on the entire training dataset
 	"""
 
-	raise NotImplementedError()
+	#raise NotImplementedError()
 
 
 def _test(model, data_loader, device=torch.device('cpu')):
+
+
+	running_loss = 0.0
+	correct = 0
+	total = 0
+
+	with torch.no_grad():
+		for data in data_loader:
+			inputs, labels = data
+
+			inputs = inputs.float()
+			labels = labels.long()
+
+			outputs = model(inputs)
+
+
+			loss = F.cross_entropy(outputs, labels)
+			running_loss += loss.item()
+
+
+			_, predicted = torch.max(outputs.data, 1)
+			total += labels.size(0)
+			correct += (predicted == labels).sum().item()
+
+	return running_loss, 100 * correct/total
 	"""
 	This function evaluates a trained neural network on a validation set
 	or a testing set. 
@@ -110,7 +186,7 @@ def _test(model, data_loader, device=torch.device('cpu')):
 	test_accuracy: percentage of correctly classified samples in the validation or testing dataset
 	"""
 
-	raise NotImplementedError()
+	#raise NotImplementedError()
 
 
 

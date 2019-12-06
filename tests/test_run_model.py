@@ -26,7 +26,7 @@ def test_train_function():
 	_, _est_loss, _est_acc = _train(model,train_loader,optimizer)
 	_est_values = np.array([_est_loss, _est_acc])
 
-	_true_values = np.array([0.70840007, 50.0]) 
+	_true_values = np.array([0.70840007, 50.0])
 
 	assert np.allclose(_true_values, _est_values)
 
@@ -48,7 +48,7 @@ def test_test_function():
 	_est_loss, _est_acc = _test(model, test_loader)
 	_est_values = np.array([_est_loss, _est_acc])
 
-	_true_values = np.array([0.69314718, 25.0]) 
+	_true_values = np.array([0.69314718, 25.0])
 
 	assert np.allclose(_true_values, _est_values)
 
@@ -72,8 +72,8 @@ def test_run_model():
 
 	model = Basic_Model(weight_init=0.5)
 
-	_, _est_loss, _est_acc = run_model(model,running_mode='train', train_set=train_dataset, 
-		valid_set = valid_dataset, batch_size=1, learning_rate=1e-3, 
+	_, _est_loss, _est_acc = run_model(model,running_mode='train', train_set=train_dataset,
+		valid_set = valid_dataset, batch_size=1, learning_rate=1e-3,
 		n_epochs=5, shuffle=False)
 
 	_est_loss_train = np.mean(_est_loss['train'])
@@ -111,5 +111,3 @@ class Basic_Model(nn.Module):
 		output = self.out(hidden_out)
 
 		return output
-
-

@@ -22,9 +22,17 @@ class Digit_Classifier(nn.Module):
     def __init__(self):
         super(Digit_Classifier, self).__init__()
 
+        self.fc1 = nn.Linear(28 * 28, 128)
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, 10)
+
+
     def forward(self, input):
-        raise NotImplementedError()
-    
+        input = F.relu(self.fc1(input))
+        input = F.relu(self.fc2(input))
+        output = F.relu(self.fc3(input))
+        return output
+
 
 class Dog_Classifier_FC(nn.Module):
     """
@@ -43,9 +51,15 @@ class Dog_Classifier_FC(nn.Module):
 
     def __init__(self):
         super(Dog_Classifier_FC, self).__init__()
+        self.fc1 = nn.Linear(12288, 128)
+        self.fc2 = nn.Linear(128, 64)
+        self.fc3 = nn.Linear(64, 10)
 
     def forward(self, input):
-        raise NotImplementedError()
+        input = F.relu(self.fc1(input))
+        input = F.relu(self.fc2(input))
+        output = F.relu(self.fc3(input))
+        return output
 
 
 class Dog_Classifier_Conv(nn.Module):
@@ -70,11 +84,27 @@ class Dog_Classifier_Conv(nn.Module):
     """
 
     def __init__(self, kernel_size, stride):
-        super(Dog_Classifier_Conv, self).__init__()   
+        super(Dog_Classifier_Conv, self).__init__()
+
+        print(kernel_size, stride)
+        k1 = kernel_size[0]
+        k2 = kernel_size[1]
+
+        s1 = stride[0]
+        s2 = stride[1]
+
+
+        self.conv1 = nn.Conv2d(3, 16,  k1, (2,2))
+        self.conv2 = nn.Conv2d(16, 32,  k2, (2,2))
+        self.fc1 = nn.Linear(32 * 13* 13, 10)
 
     def forward(self, input):
-        raise NotImplementedError()
-
+        input = input.permute(0, 3, 1, 2)
+        input = F.relu(self.conv1(input))
+        input = F.relu(self.conv2(input))
+        input = input.view(-1, 32*13*13)
+        output = self.fc1(input)
+        return output
 
 class Synth_Classifier(nn.Module):
     """
@@ -98,10 +128,24 @@ class Synth_Classifier(nn.Module):
     """
 
     def __init__(self, kernel_size, stride):
-        super(Synth_Classifier, self).__init__()   
-        
+        super(Synth_Classifier, self).__init__()
+
+        #print(kernel_size, stride)
+        self.conv1 = nn.Conv2d(1, 2, kernel_size[0], stride[0])
+        self.conv2 = nn.Conv2d(2, 4, kernel_size[1], stride[1])
+        self.conv3 = nn.Conv2d(4, 8, kernel_size[2], stride[2])
+        self.fc1 = nn.Linear(8 , 2)
+
+
     def forward(self, input):
-        raise NotImplementedError()
+        input = input.permute(0, 3, 1, 2)
+        output = F.max_pool2d(F.relu(self.conv1(input)), kernel_size = 2)
+        output = F.max_pool2d(F.relu(self.conv2(output)), kernel_size = 2)
+        output = F.max_pool2d(F.relu(self.conv3(output)), kernel_size = 2)
+        output = output.view(-1, 8)
+        output = F.relu(self.fc1(output))
+        print(output.size())
+        return output
 
 
 
