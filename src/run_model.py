@@ -29,6 +29,12 @@ def run_model(model,running_mode='train', train_set=None, valid_set=None, test_s
 			if(valid_set is not None):
 				valid = DataLoader(valid_set, batch_size, shuffle)
 				valid_loss, valid_accuracy = _test(model, valid)
+
+
+
+
+
+
 				valid_loss_list.append(valid_loss/4)
 				valid_accuracy_list.append(valid_accuracy)
 				if(valid_loss < stop_thr):
