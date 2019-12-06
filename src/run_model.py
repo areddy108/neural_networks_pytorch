@@ -15,18 +15,29 @@ def run_model(model,running_mode='train', train_set=None, valid_set=None, test_s
 		#_train(model, data)
 		optimizer = optim.SGD(model.parameters(), learning_rate)
 		data = DataLoader(train_set, batch_size, shuffle)
+		train_loss_list = []
+		train_accuracy_list= []
+		valid_loss_list = []
+		valid_accuracy_list = []
+
+		print(train_set)
 		for i in range(n_epochs):
 			model, train_loss, train_accuracy = _train(model, data, optimizer)
+			train_loss_list.append(train_loss)
+			train_accuracy_list.append(train_accuracy)
 			print(valid_set)
 			if(valid_set is not None):
 				valid = DataLoader(valid_set, batch_size, shuffle)
 				valid_loss, valid_accuracy = _test(model, valid)
+				valid_loss_list.append(valid_loss/4)
+				valid_accuracy_list.append(valid_accuracy)
 				if(valid_loss < stop_thr):
 					break
-
+		return model, {'train': train_loss_list, 'valid': valid_loss_list}, {'train': train_accuracy_list, 'valid': valid_accuracy_list}
 	else:
 		data = DataLoader(test_set, batch_size, shuffle)
 		test_loss, test_accuracy = _test(model, data)
+		return test_loss, test_accuracy
 
 	"""
 	This function either trains or evaluates a model. 
