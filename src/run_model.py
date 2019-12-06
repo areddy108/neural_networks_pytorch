@@ -19,11 +19,10 @@ def run_model(model,running_mode='train', train_set=None, valid_set=None, test_s
 			model, train_loss, train_accuracy = _train(model, data, optimizer)
 			print(valid_set)
 			if(valid_set is not None):
-				print('reached')
-				#valid = DataLoader(valid_set, batch_size, shuffle)
-				#valid_loss, valid_accuracy = _test(model, valid)
-				#(valid_loss < stop_thr):
-					#break
+				valid = DataLoader(valid_set, batch_size, shuffle)
+				valid_loss, valid_accuracy = _test(model, valid)
+				if(valid_loss < stop_thr):
+					break
 
 	else:
 		data = DataLoader(test_set, batch_size, shuffle)
